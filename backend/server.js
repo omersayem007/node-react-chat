@@ -20,6 +20,8 @@ const db = require("monk")(connection_string);
 
 const collection_foodItems = db.get("FoodItems");
 
+const collection_football = db.get("football");
+
 // our localhost port
 const port = process.env.PORT || 3001;
 
@@ -37,7 +39,7 @@ io.on("connection", socket => {
 
   // Returning the initial data of food menu from FoodItems collection
   socket.on("initial_data", () => {
-    collection_foodItems.find({}).then(docs => {
+    collection_football.find({}).then(docs => {
       io.sockets.emit("get_data", docs);
     });
   });
@@ -53,13 +55,30 @@ io.on("connection", socket => {
   });
 
   // Order completion, gets called from /src/main/Kitchen.js
-  socket.on("mark_done", id => {
-    collection_foodItems
-      .update({ _id: id }, { $inc: { ordQty: -1, prodQty: 1 } })
+  socket.on("mark_done", (id,team) => {
+
+    if(team === "RealMadrid"){
+
+      collection_football
+      .update({ _id: id }, { $inc: { RealMadrid : 1 } })
       .then(updatedDoc => {
         //Updating the different Kitchen area with the current Status.
         io.sockets.emit("change_data");
       });
+
+    }
+    else{
+
+      collection_football
+      .update({ _id: id }, { $inc: { ManchesterUnited : 1 } })
+      .then(updatedDoc => {
+        //Updating the different Kitchen area with the current Status.
+        io.sockets.emit("change_data");
+      });
+
+    }
+    
+
   });
 
   // Functionality to change the predicted quantity value, called from /src/main/UpdatePredicted.js
